@@ -1,5 +1,5 @@
 /*
-This C# snippet can also be abstracted into two separate classes (one for client and one for server), as I have done with my current project. In saying that, this piece of code will form the backbone of your UDP network.
+This C# snippet can also be abstracted into two separate classes (for client and for server), as I have done with my current project. In saying that, this piece of code will form the backbone of your UDP network.
 */
 
 
