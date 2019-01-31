@@ -1,3 +1,8 @@
+/*
+This C# snippet can also be abstracted into two separate classes (one for client and one for server), as I have done with my current project. In saying that, this piece of code will form the backbone of your UDP network.
+*/
+
+
 using System;
 using System.Text;
 using System.Net;
