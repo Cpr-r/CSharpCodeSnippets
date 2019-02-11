@@ -1,8 +1,7 @@
 /*
-This C# snippet can also be abstracted into two separate classes (for client and for server), as I have done with my current project. In saying that, this piece of code will form the backbone of your UDP network.
+This C# snippet can also be abstracted into two separate classes (for client and for server), as I have done with my current project. 
+In saying that, this piece of code will form the backbone of your UDP network.
 */
-
-
 
 using System;
 using System.Text;
@@ -32,22 +31,11 @@ namespace UdpClientServer
         private const int BUFFER_SIZE = 8 * 1024;
 
         /// <summary>
-        /// Retrieves the end point of the latest client.
-        /// </summary>
-        public EndPoint GetEndPoint 
-        {
-            get 
-            {
-                return endPoint;
-            }
-        }
-
-        /// <summary>
-        /// Initialises the udp server.
+        /// Initialises the udp server via address and port; the parameters can be changed to EndPoint type if necessary.
         /// </summary>
         public void BeginServer(string address, int port)
         {
-            // Instantiate a new socket, set it to the udp protocol, and include hosting information. Socket is instantiated here in case we want to start/stop the server at run-time.
+            // Instantiate a new socket, set it to the udp protocol, and include hosting information. Socket is instantiated here in   case we want to start/stop the server at run-time.
             this.udpState.WorkSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             this.udpState.WorkSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
             this.udpState.WorkSocket.Bind(new IPEndPoint(IPAddress.Parse(address), port));
@@ -57,7 +45,7 @@ namespace UdpClientServer
         }
 
         /// <summary>
-        /// Initialises the udp client.
+        /// Initialises the udp client; the parameters can be changed to EndPoint type if necessary.
         /// </summary>
         public void BeginClient(string address, int port)
         {
