@@ -31,7 +31,7 @@ private const int SOCKET_IO_UDP_CONNRESET = -1744830452;
 private UdpClient udpClient = New UdpClient(endPoint);
 
 // Your initialisation logic for your UDP client.
-private void SomeInitialisationFunction()
+private void SomeInitialisationMethod()
 {
     // This line fixes the error, so make sure to execute this before sending packets through your UDP socket.
     udpClient.Client.IOControl((IOControlCode)SOCKET_IO_UDP_CONNRESET, new byte[] { 0, 0, 0, 0 }, null);
