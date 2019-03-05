@@ -3,10 +3,10 @@ This C# snippet can also be abstracted into two separate classes (for client and
 In saying that, this piece of code will form the backbone of your UDP network.
 */
 
-using System;
+using System.Net.Sockets;
 using System.Text;
 using System.Net;
-using System.Net.Sockets;
+using System;
 
 namespace UdpClientServer
 {
@@ -19,19 +19,19 @@ namespace UdpClientServer
         }
 
         /// <summary>
-        /// Required members for the udp network capabilities.
+        /// Required members for the UDP socket.
         /// </summary>
         private StateObject udpState = new StateObject();
         private EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
         private AsyncCallback receive = null;
        
         /// <summary>
-        /// Used to determine the size of the state object's buffer array.
+        /// Used to determine the size of the state object's buffer.
         /// </summary>
         private const int BUFFER_SIZE = 8 * 1024;
 
         /// <summary>
-        /// Initialises the udp server via address and port; the parameters can be changed to EndPoint type if necessary.
+        /// Initialises the UDP server via address and port. (The parameters can be changed to EndPoint type if necessary.)
         /// </summary>
         public void BeginServer(string address, int port)
         {
@@ -45,7 +45,7 @@ namespace UdpClientServer
         }
 
         /// <summary>
-        /// Initialises the udp client; the parameters can be changed to EndPoint type if necessary.
+        /// Initialises the udp client. (The parameters can be changed to EndPoint type if necessary.)
         /// </summary>
         public void BeginClient(string address, int port)
         {
@@ -53,7 +53,7 @@ namespace UdpClientServer
         }
 
         /// <summary>
-        /// Sends a packet through the udp protocol asynchronously.
+        /// Sends a packet through the UDP socket asynchronously.
         /// </summary>
         public void SendMessage(string text)
         {
@@ -68,7 +68,7 @@ namespace UdpClientServer
         }
 
         /// <summary>
-        /// Receives a packet through the udp protocol asynchronously.
+        /// Receives a packet through the UDP socket asynchronously.
         /// </summary>
         private void ReceiveMessage()
         {
@@ -79,7 +79,7 @@ namespace UdpClientServer
 
                 Console.WriteLine("[" + DateTime.Now.ToString() + "] Message from {0} ({1} bytes): {2}", this.endPoint.ToString(), bytes, Encoding.ASCII.GetString(asyncUdpState.Buffer, 0, bytes));
                 
-                this.socket.BeginReceiveFrom(asyncUdpState.Buffer, 0, BUFFER_SIZE, SocketFlags.None, ref this.endPoint, this.receive, asyncUdpState);
+                this.udpState.WorkSocket.BeginReceiveFrom(asyncUdpState.Buffer, 0, BUFFER_SIZE, SocketFlags.None, ref this.endPoint, this.receive, asyncUdpState);
             }, 
             this.udpState);
         }
