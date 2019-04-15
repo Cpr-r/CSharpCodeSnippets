@@ -1,6 +1,6 @@
 /// This class allows you to create hashed strings using the .NET implentation of PBKDF2--Rfc2898
 /// (see: https://docs.microsoft.com/en- us/dotnet/api/system.security.cryptography.rfc2898derivebytes). 
-/// This particular class also uses SHA512, so you are able to create a larger entropy than the standard 20 bytes.
+/// This particular implementation also uses SHA512, so you are able to create a larger entropy than the standard 20 bytes.
 
 using System;
 using System.Security.Cryptography;
