@@ -21,14 +21,11 @@ Windows XP: Controls whether UDP PORT_UNREACHABLE messages are reported.
 Set to TRUE to enable reporting. Set to FALSE to disable reporting. 
 */
 
-
-
-
 // The enum code for 'SIO_UDP_CONNRESET'.
 private const int SOCKET_IO_UDP_CONNRESET = -1744830452;
 
 // Your instantiation logic for your UDP client.
-private UdpClient udpClient = New UdpClient(endPoint);
+private UdpClient udpClient = New UdpClient(port);
 
 // Your initialisation logic for your UDP client.
 private void SomeInitialisationMethod()
