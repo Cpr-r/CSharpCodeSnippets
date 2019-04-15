@@ -5,7 +5,7 @@ using System.Net.Sockets;
 
 namespace MyProgram.Networking
 {
-    // It's typically wise just to give this class its own file space.
+    // It's typically wise to give this class its own file space.
     internal sealed class StateObject
     {
         internal byte[] Buffer = new byte[UdpSocket.BUFFER_SIZE];
