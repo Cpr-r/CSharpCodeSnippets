@@ -1,132 +1,97 @@
 /// This class allows you to create hashed strings using the .NET implentation of PBKDF2--Rfc2898
 /// (see: https://docs.microsoft.com/en- us/dotnet/api/system.security.cryptography.rfc2898derivebytes). 
-/// This particular class also utilises SHA512, so you are able to create a larger entropy than the standard 20 bytes.
-/// USAGE:
-///     Usage is simple: When you have a new password to store (e.g., a user creating an account), simply invoke (externally)
-///     GenerateHash(string passwordToHash) and store the returned result to your permanency, e.g., a database. 
-///     When you need to verify a hashed password (e.g., a user logging in), simply retrieve the stored password hash from
-///     your permanency and invoke VerifyPassword(passwordToVerify, actualPassword)--where the passwordToVerify is the user's
-///     inputted password value and actualPassword is the retrieved hashed password from your permanency. The returned bool
-///     from VerifyPassword will be the final result of the user's login attempt.
+/// This particular class also uses SHA512, so you are able to create a larger entropy than the standard 20 bytes.
 
-using System.Security.Cryptography;
 using System;
+using System.Security.Cryptography;
 
 namespace MyProgram.Security
 {
-    internal class PasswordHashing
+    internal static class Hashing
     {
-        private const int SALT_LENGTH = 32;
-        private const int KEY_LENGTH = 32;
-        private const int ITERATIONS = 20_000;
-
         /// <summary>
-        /// Generates a string hash using the passed password and the default salt byte length, key length, and number of iterations.
+        /// Hashes the passed string using the passed salt byte length, key length, and number of iterations--outputting the hash as bytes and hash as string.
         /// </summary>
-        internal string GenerateHash(string passwordToHash)
+        internal static bool GenerateHash(in string stringToHash, in int saltLength, in int keyLength, in int iterations, out byte[] hashBytes, out string hash)
         {
-            if (string.IsNullOrWhiteSpace(passwordToHash))
-            {
-                return string.Empty;
-            }
+            hash = string.Empty;
+            hashBytes = Array.Empty<byte>();
 
-            byte[] salt = this.GenerateSalt(); 
-            byte[] key = new byte[KEY_LENGTH];
-            byte[] iterations = BitConverter.GetBytes(ITERATIONS);
-
-            using (var rfc2898 = new Rfc2898DeriveBytes(passwordToHash, salt, ITERATIONS, HashAlgorithmName.SHA512))
-            {
-                key = rfc2898.GetBytes(KEY_LENGTH);
-            }
-
-            // Compile the hash (32 bytes of salt, 32 bytes of key, 4 bytes of iteration).
-            byte[] hash = new byte[salt.Length + key.Length + iterations.Length];
-            Buffer.BlockCopy(salt, 0, hash, 0, salt.Length);
-            Buffer.BlockCopy(key, 0, hash, key.Length, key.Length);
-            Buffer.BlockCopy(iterations, 0, hash, salt.Length + key.Length, iterations.Length);
-
-            return Convert.ToBase64String(hash);
-        }
-
-        /// <summary>
-        /// Verifies the passed password to verify by comparing it against the stored result (as bytes)--in constant time.
-        /// </summary>
-        internal bool VerifyPassword(string passwordToVerify, string actualPassword)
-        {
-            if (string.IsNullOrWhiteSpace(passwordToVerify) || string.IsNullOrWhiteSpace(actualPassword))
-            {
+            if (string.IsNullOrWhiteSpace(stringToHash))
                 return false;
-            }
 
-            byte[] actualPasswordBytes = Convert.FromBase64String(actualPassword);
-            byte[] salt = new byte[SALT_LENGTH];
+            byte[] salt = GenerateSalt(in saltLength);
+            byte[] key = new byte[keyLength];
+            byte[] iterationsBytes = BitConverter.GetBytes(iterations);
 
-            // I.e., 68 - 32 - 32 = 4.
-            int iterationBytesLength = actualPasswordBytes.Length - KEY_LENGTH - SALT_LENGTH;
-            byte[] iterationBytes = new byte[iterationBytesLength];
-
-            Buffer.BlockCopy(actualPasswordBytes, 0, salt, 0, SALT_LENGTH);
-            Buffer.BlockCopy(actualPasswordBytes, KEY_LENGTH + SALT_LENGTH, iterationBytes, 0, iterationBytes.Length);
-
-            // Generate a hash using the stored salt and iterations--combined with the password to verify (as bytes).
-            byte[] passwordToVerifyBytes = this.GenerateHash(passwordToVerify, salt, BitConverter.ToInt32(iterationBytes, 0));
-
-            // Returns true if the bytes are equivalent--false if they are not.
-            return this.ConstantTimeComparison(passwordToVerifyBytes, actualPasswordBytes);
-        }
-
-        /// <summary>
-        /// Generates a salt using the default salt byte length.
-        /// </summary>
-        private byte[] GenerateSalt()
-        {
-            // Generates a 32 byte salt.
-            using (var rngCryptoServiceProvider = new RNGCryptoServiceProvider())
+            using (var rfc2898 = new Rfc2898DeriveBytes(stringToHash, salt, iterations, HashAlgorithmName.SHA512))
             {
-                byte[] salt = new byte[SALT_LENGTH];
-                rngCryptoServiceProvider.GetBytes(salt);
-
-                return salt;
+                key = rfc2898.GetBytes(keyLength);
             }
-        }
 
-        /// <summary>
-        /// Generates a byte[] hash using the passed password, salt, and iteration count.
-        /// </summary>
-        private byte[] GenerateHash(string passwordToHash, byte[] salt, int iterations)
-        {
-            if (string.IsNullOrWhiteSpace(passwordToHash) || salt == Array.Empty<byte>() || iterations <= 0)
-            {
-                return Array.Empty<byte>();
-            }
-                   
-            byte[] key = new byte[KEY_LENGTH];                      
-            byte[] iterationBytes = BitConverter.GetBytes(iterations);  
-
-            using (var rfc2898 = new Rfc2898DeriveBytes(passwordToHash, salt, iterations, HashAlgorithmName.SHA512))
-            {
-                key = rfc2898.GetBytes(KEY_LENGTH);
-            }
+            // Prepare the hash.
+            hashBytes = new byte[salt.Length + key.Length + iterationsBytes.Length];
 
             // Compile the hash.
-            byte[] hash = new byte[salt.Length + key.Length + iterationBytes.Length];
-            Buffer.BlockCopy(salt, 0, hash, 0, salt.Length);
-            Buffer.BlockCopy(key, 0, hash, key.Length, key.Length);
-            Buffer.BlockCopy(iterationBytes, 0, hash, salt.Length + key.Length, iterationBytes.Length);
+            Buffer.BlockCopy(salt, 0, hashBytes, 0, salt.Length);
+            Buffer.BlockCopy(key, 0, hashBytes, key.Length, key.Length);
+            Buffer.BlockCopy(iterationsBytes, 0, hashBytes, salt.Length + key.Length, iterationsBytes.Length);
 
-            return hash;
+            // Provide Base64 string format.
+            hash = Convert.ToBase64String(hashBytes);
+
+            return true;
         }
 
         /// <summary>
-        /// Compares the password to verify and the actual password (as bytes), in constant time--so as to not leak information.
+        /// Verifies the challenge by comparing it against the hash (as bytes)--in constant time.
         /// </summary>
-        private bool ConstantTimeComparison(byte[] passwordToVerifyBytes, byte[] actualPasswordBytes)
+        internal static bool VerifyChallenge(in string challenge, in string hash, in int saltLength, in int keyLength, in int iterations)
         {
-            uint difference = (uint)passwordToVerifyBytes.Length ^ (uint)actualPasswordBytes.Length;
-            for (int i = 0; i < passwordToVerifyBytes.Length && i < actualPasswordBytes.Length; i++)
+            if (string.IsNullOrWhiteSpace(challenge) || string.IsNullOrWhiteSpace(hash))
+                return false;
+
+            byte[] hashBytes = Convert.FromBase64String(hash);
+            byte[] salt = new byte[saltLength];
+
+            // Because iterations are stored numerically as an int, simply get the size of an int (typically 4 bytes).
+            byte[] iterationBytes = new byte[sizeof(int)];
+
+            Buffer.BlockCopy(hashBytes, 0, salt, 0, saltLength);
+            Buffer.BlockCopy(hashBytes, keyLength + saltLength, iterationBytes, 0, iterationBytes.Length);
+
+            // Generate a hash of the challenge so as to compare against the stored hash.
+            if (GenerateHash(in challenge, in saltLength, in keyLength, in iterations, out byte[] challengeBytes, out _))
+                return ConstantTimeComparison(in challengeBytes, in hashBytes);
+            else
+                return false;
+        }
+
+        /// <summary>
+        /// Generates a salt using the passed salt byte length.
+        /// </summary>
+        private static byte[] GenerateSalt(in int saltLength)
+        {
+            byte[] salt = new byte[saltLength];
+
+            // Generate the salt.
+            using (var rngCryptoServiceProvider = new RNGCryptoServiceProvider())
             {
-                difference |= (uint)(passwordToVerifyBytes[i] ^ actualPasswordBytes[i]);
+                rngCryptoServiceProvider.GetBytes(salt);
             }
+
+            return salt;
+        }
+
+        /// <summary>
+        /// Compares the challenge and hash (as bytes) in constant time--so as to not leak information.
+        /// </summary>
+        private static bool ConstantTimeComparison(in byte[] challengeBytes, in byte[] hashBytes)
+        {
+            uint difference = (uint)challengeBytes.Length ^ (uint)hashBytes.Length;
+
+            for (int i = 0; i < challengeBytes.Length && i < hashBytes.Length; i++)
+                difference |= (uint)(challengeBytes[i] ^ hashBytes[i]);
 
             return difference == 0;
         }
