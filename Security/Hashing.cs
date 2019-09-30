@@ -35,9 +35,9 @@ namespace MyProgram.Security
             Buffer.BlockCopy(salt, 0, hashBytes, 0, salt.Length);
             Buffer.BlockCopy(key, 0, hashBytes, key.Length, key.Length);
             Buffer.BlockCopy(iterationsBytes, 0, hashBytes, salt.Length + key.Length, iterationsBytes.Length);
-
             // Provide Base64 string format, i.e., the thing to store (in a database, for example).
             hash = Convert.ToBase64String(hashBytes);
+            
             return true;
         }
 
